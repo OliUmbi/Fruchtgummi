@@ -1,18 +1,16 @@
-from multiprocessing import Pool
+from multiprocessing import Pool, freeze_support
 from random import randint
 from numpy import matrix
 
-iterations = 1000
-combinations = []
-
-for pathLenght in range(6, 31):
-    for sweets in range(2, 11):
-        combinations.append([pathLenght, sweets])
-
-data = []
+def createcombinations():
+    combinations = []
+    for pathLenght in range(6, 31):
+        for sweets in range(2, 11):
+            combinations.append((pathLenght, sweets))
+    return combinations
 
 def runiterations(path, sweet):
-    global data
+    iterations = 10000
     win = 0
     avgPlayes = []
     
@@ -36,15 +34,19 @@ def runiterations(path, sweet):
     
     winRate = 100 / iterations * win
     avg = sum(avgPlayes) / len(avgPlayes)
-    data.append([path, sweet, winRate, avg])
+    return [path, sweet, winRate, avg]
 
 
-#pool = Pool()
-#pool.map(runiterations, combinations)
+def main():
+    combinations = createcombinations()
+    data = []
+    with Pool() as pool:
+        data.append(pool.starmap(runiterations, combinations))
+    data = data[0]
+    data = sorted(data, key=lambda x: x[2], reverse=True)
+    print(matrix(data))
 
-for combination in combinations:
-    runiterations(combination[0], combination[1])
 
-data = sorted(data, key=lambda x: x[2], reverse=True)
-
-print(matrix(data))
+if __name__=="__main__":
+    freeze_support()
+    main()
